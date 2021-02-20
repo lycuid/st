@@ -1904,66 +1904,74 @@ csireset(void)
 void
 strhandle(void)
 {
-  char *p = NULL, *dec;
-  int j, narg, par;
+	char *p = NULL, *dec;
+	int j, narg, par;
 
-  term.esc &= ~(ESC_STR_END|ESC_STR);
-  strparse();
-  par = (narg = strescseq.narg) ? atoi(strescseq.args[0]) : 0;
+	term.esc &= ~(ESC_STR_END|ESC_STR);
+	strparse();
+	par = (narg = strescseq.narg) ? atoi(strescseq.args[0]) : 0;
 
-  switch (strescseq.type) {
-  case ']': /* OSC -- Operating System Command */
-    switch (par) {
-    case 0:
-    case 1:
-    case 2:
-      if (narg > 1)
-        xsettitle(strescseq.args[1]);
-      return;
-    case 52:
-      if (narg > 2 && allowwindowops) {
-        dec = base64dec(strescseq.args[2]);
-        if (dec) {
-          xsetsel(dec);
-          xclipcopy();
-        } else {
-          fprintf(stderr, "erresc: invalid base64\n");
-        }
-      }
-      return;
-    case 4: /* color set */
-      if (narg < 3)
-        break;
-      p = strescseq.args[2];
-      /* FALLTHROUGH */
-    case 104: /* color reset, here p = NULL */
-      j = (narg > 1) ? atoi(strescseq.args[1]) : -1;
-      if (xsetcolorname(j, p)) {
-        if (par == 104 && narg <= 1)
-          return; /* color reset without parameter */
-        fprintf(stderr, "erresc: invalid color j=%d, p=%s\n",
-                j, p ? p : "(null)");
-      } else {
-        /*
-         * TODO if defaultbg color is changed, borders
-         * are dirty
-         */
-        redraw();
-      }
-      return;
-    }
-    break;
-  case 'k': /* old title set compatibility */
-    xsettitle(strescseq.args[0]);
-    return;
-  case 'P': /* DCS -- Device Control String */
-  case '_': /* APC -- Application Program Command */
-  case '^': /* PM -- Privacy Message */
-    return;
-  }
+	switch (strescseq.type) {
+	case ']': /* OSC -- Operating System Command */
+		switch (par) {
+		case 0:
+			if (narg > 1) {
+				xsettitle(strescseq.args[1]);
+				xseticontitle(strescseq.args[1]);
+			}
+			return;
+		case 1:
+			if (narg > 1)
+				xseticontitle(strescseq.args[1]);
+			return;
+		case 2:
+			if (narg > 1)
+				xsettitle(strescseq.args[1]);
+			return;
+		case 52:
+			if (narg > 2 && allowwindowops) {
+				dec = base64dec(strescseq.args[2]);
+				if (dec) {
+					xsetsel(dec);
+					xclipcopy();
+				} else {
+					fprintf(stderr, "erresc: invalid base64\n");
+				}
+			}
+			return;
+		case 4: /* color set */
+			if (narg < 3)
+				break;
+			p = strescseq.args[2];
+			/* FALLTHROUGH */
+		case 104: /* color reset, here p = NULL */
+			j = (narg > 1) ? atoi(strescseq.args[1]) : -1;
+			if (xsetcolorname(j, p)) {
+				if (par == 104 && narg <= 1)
+					return; /* color reset without parameter */
+				fprintf(stderr, "erresc: invalid color j=%d, p=%s\n",
+				        j, p ? p : "(null)");
+			} else {
+				/*
+				 * TODO if defaultbg color is changed, borders
+				 * are dirty
+				 */
+				redraw();
+			}
+			return;
+		}
+		break;
+	case 'k': /* old title set compatibility */
+		xsettitle(strescseq.args[0]);
+		return;
+	case 'P': /* DCS -- Device Control String */
+	case '_': /* APC -- Application Program Command */
+	case '^': /* PM -- Privacy Message */
+		return;
+	}
 
-  fprintf(stderr, "erresc: unknown str ");
-  strdump();
+	fprintf(stderr, "erresc: unknown str ");
+	strdump();
 }
 
 void
