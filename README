@@ -1,0 +1,7 @@
+My personal build of suckless' st. (https://st.suckless.org/)
+
+installed patches:
+  - xresources.
+  - scrollback.
+  - font ligatures.
+
